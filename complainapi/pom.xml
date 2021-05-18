@@ -101,8 +101,8 @@
 	</build>
 	<distributionManagement>
         <snapshotRepository>
-          <id>Payment</id>
-          <name>Payment</name>
+          <id>Complain</id>
+          <name>Complain</name>
           <url>http://localhost:8091/repository/Complain/</url>
         </snapshotRepository>
      </distributionManagement>
