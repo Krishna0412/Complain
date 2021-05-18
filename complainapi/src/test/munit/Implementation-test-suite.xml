@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="Implementation-test-suite.xml" />
+	<munit:test name="Implementation-test-suite-GetAllFlowTest" doc:id="73a054ea-41e3-4b19-879f-a7ceb3596ed8" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="35227e17-bbe0-485e-831b-2aed5e377a64" />
+			<flow-ref doc:name="Flow-ref to GetAllFlow" doc:id="6845fcaf-034d-4a1d-9ca4-5b202d58db70" name="GetAllFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="95bc1bc0-8dac-4cef-9185-c3b6d7587d1b" is="#[MunitTools::notNullValue()]" expression="#[payload]" message='"Payload should not be null"'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Implementation-test-suite-GetByIDFlowTest" doc:id="2e24f33d-3159-47f1-8dca-595eb6a8de34" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="cc02028c-faa6-4183-b1b6-66334765bc6a" />
+			<flow-ref doc:name="Flow-ref to GetByIDFlow" doc:id="155e1f85-5629-4bb3-87ee-23694b4c0d83" name="GetByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="489b682b-e798-4468-840e-eae5f18a7ece" is="#[MunitTools::notNullValue()]" message='"Payload should not be null"' expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Implementation-test-suite-DeleteFlowTest" doc:id="645556a8-9fad-4271-8e31-f573a0033a25" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="21528585-d46a-4d57-ab6e-1bc96cc9857f" />
+			<flow-ref doc:name="Flow-ref to DeleteFlow" doc:id="9f0702b9-b260-417a-ba27-4960996d52b3" name="DeleteFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="0b8f88a5-4304-461f-b299-401c33a24eb9" actual="#[payload.message]" expected='#["The data for your complaint is deleted"]' message='"Check the delete flow"'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Implementation-test-suite-PatchFlowTest" doc:id="04a96a33-2feb-4b40-94d8-b0c9b59d2a81" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="079ea32d-3463-49d4-a138-5e7d881635ab" />
+			<flow-ref doc:name="Flow-ref to PatchFlow" doc:id="6078ab5b-2597-4cfa-accf-302c0ef52589" name="PatchFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="4d376a39-fcf1-4484-b391-fad99eab867d" actual="#[payload.message]" expected='#["Your data is updated"]' message='"Check the patch flow"'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Implementation-test-suite-PostFlowTest" doc:id="bbe2820c-3622-4dbe-82b7-668257548ff2" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="0f06544f-f67f-4298-9423-b9b8f0851924" />
+			<flow-ref doc:name="Flow-ref to PostFlow" doc:id="5b81e6dc-7d7c-4484-86c9-1b1b34651530" name="PostFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="035c0031-eb4e-4b3a-b03c-5321efe5a208" actual="#[vars.httpStatus]" expected='#["201"]'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Implementation-test-suite-PutFlowTest" doc:id="70274dad-f402-405a-bb97-9f095796bec7" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="7cd8061b-644b-42e4-b3c0-41ac0cbebdd3" />
+			<flow-ref doc:name="Flow-ref to PutFlow" doc:id="d415208a-1201-4ade-bccb-9651bf69f6f9" name="PutFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="d93fbf41-aa6a-4278-9f78-74e1890cd3ef" actual="#[vars.httpStatus]" expected='#["201"]'/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
