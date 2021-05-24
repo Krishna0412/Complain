@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 	<sub-flow name="Subflow" doc:id="502c1c09-b040-4144-a5f8-f7b49dbf8321" >
 		<set-variable value="#[payload.productCode]" doc:name="Code" doc:id="cf5266d3-12f8-4563-a920-45b869de6825" variableName="Code" />
 		<set-variable value="#[payload.complainDesc]" doc:name="Desc" doc:id="1008bc3d-770e-4a4a-80e9-3c007db0db8d" variableName="Desc" />
-		<set-variable value='#[now() as DateTime {format: "yyyy-mm-dd hh:mm:ss"}]' doc:name="Date" doc:id="6d8719be-e53c-4fee-8f4d-9c9c1e7fbf18" variableName="Date" />
+		<set-variable value='#[now() as DateTime {format: "yyyy-mm-dd"}]' doc:name="Date" doc:id="6d8719be-e53c-4fee-8f4d-9c9c1e7fbf18" variableName="Date" />
 		<set-variable value="#[payload.customerNumber]" doc:name="Number" doc:id="c9db2b57-9c78-4097-8a82-747d2a071d4a" variableName="Number" />
 		<set-variable value="#[payload.customerMail]" doc:name="Mail" doc:id="3cc2d5b1-08c3-4708-a789-c1ea719e412d" variableName="Mail"/>
 		<set-variable value="#[payload.complainStatus]" doc:name="status" doc:id="1574e36e-0a33-40fb-a17e-d99814dcd8c3" variableName="status"/>
