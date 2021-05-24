@@ -1,67 +1,218 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
 	
 	<sub-flow name="Subflow" doc:id="502c1c09-b040-4144-a5f8-f7b49dbf8321" >
 		<set-variable value="#[payload.productCode]" doc:name="Code" doc:id="cf5266d3-12f8-4563-a920-45b869de6825" variableName="Code" />
 		<set-variable value="#[payload.complainDesc]" doc:name="Desc" doc:id="1008bc3d-770e-4a4a-80e9-3c007db0db8d" variableName="Desc" />
-		<set-variable value="#[payload.complainDate]" doc:name="Date" doc:id="6d8719be-e53c-4fee-8f4d-9c9c1e7fbf18" variableName="Date" />
+		<set-variable value='#[now() as DateTime {format: "yyyy-mm-dd hh:mm:ss"}]' doc:name="Date" doc:id="6d8719be-e53c-4fee-8f4d-9c9c1e7fbf18" variableName="Date" />
 		<set-variable value="#[payload.customerNumber]" doc:name="Number" doc:id="c9db2b57-9c78-4097-8a82-747d2a071d4a" variableName="Number" />
+		<set-variable value="#[payload.customerMail]" doc:name="Mail" doc:id="3cc2d5b1-08c3-4708-a789-c1ea719e412d" variableName="Mail"/>
+		<set-variable value="#[payload.complainStatus]" doc:name="status" doc:id="1574e36e-0a33-40fb-a17e-d99814dcd8c3" variableName="status"/>
+		<set-variable value='#["Pending"]' doc:name="defaultStatus" doc:id="d696ea8c-8808-4a10-9859-5a0a91a7d7cd" variableName="defaultStatus"/>
+		<set-variable value="#[payload.orderNumber]" doc:name="orderNumber" doc:id="e8b37dab-3495-47ac-8f43-da4dba956114" variableName="orderNumber"/>
 	</sub-flow>
 	<flow name="GetAllFlow" doc:id="4b8b8e50-b3cb-4b18-ad66-e14d4fbe570b" >
+		<set-variable value="#[attributes.queryParams.'orderNumber']" doc:name="orderNumber" doc:id="61ad111c-2e0c-4533-b3e2-a677ed2c710e" variableName="orderNumber"/>
+		<set-variable value="#[attributes.queryParams.'orderDate']" doc:name="orderDate" doc:id="497a2af6-e6b4-498b-bc81-d4f3d2e6a6d4" variableName="orderDate"/>
+		<set-variable value="#[attributes.queryParams.'customerNumber']" doc:name="customerNumber" doc:id="1923849b-c3d9-4c10-96e0-49faa36b1826" variableName="customerNumber"/>
 		<choice doc:name="Choice" doc:id="52ca65f7-2880-44c7-9cbd-72142a32068c" >
 			<when expression="#[attributes.queryParams.'customerNumber' != null and attributes.queryParams.'orderNumber' !=null and attributes.queryParams.'orderDate' !=null]">
-				<db:select doc:name="Select" doc:id="93cfee9b-5e12-4791-b6b7-8415e269f16a" config-ref="Database_Config">
+				<db:query-single doc:name="Query single" doc:id="e1c574b3-812a-4d41-834d-0994f66197f7" config-ref="Database_Config">
 					<db:sql ><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
 where C.customerNumber=:cust and O.orderNumber=:OID and O.orderDate=:OD;]]></db:sql>
 					<db:input-parameters ><![CDATA[#[{
-	'cust': attributes.queryParams.'customerNumber',
-	'OID': attributes.queryParams.'orderNumber',
-	'OD': attributes.queryParams.'orderDate'
+	'cust': vars.customerNumber,
+	'OID': vars.orderNumber,
+	'OD': vars.orderDate
+}]]]></db:input-parameters>
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="2843c769-d9a5-4668-88f6-43937af56339" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="93cfee9b-5e12-4791-b6b7-8415e269f16a" config-ref="Database_Config">
+					<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
+where C.customerNumber=:cust and O.orderNumber=:OID and O.orderDate=:OD;]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	'cust': vars.customerNumber,
+	'OID': vars.orderNumber,
+	'OD': vars.orderDate
 }]]]></db:input-parameters>
 				</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="734a7245-6433-4c1f-8eea-a0de7c196ef9" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+ Complain:{
+ 	CustomerNumber: $.customerNumber,
+ 	OrderDetails:{
+ 		OrderID: $.orderNumber,
+ 		OrderDate: $.orderDate
+ 		
+ 	},
+ 	ProductDetails:{
+ 		ProductId: $.productCode,
+ 		ProductName: $.productName,
+ 		ProductCost: $.buyPrice
+ 	}
+ }
+		
+	}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="5a7bb921-3d9b-433f-814d-887247c7c823" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"You have enterd wrong fields"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
 			</when>
-			<when expression="#[attributes.queryParams.'customerNumber' != null]">
-				<db:select doc:name="Select" doc:id="fe35509f-cdc2-40fe-a393-5bfcaa1101fb" config-ref="Database_Config">
-					<db:sql ><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
-where C.customerNumber=:cust;]]></db:sql>
-					<db:input-parameters ><![CDATA[#[{
-	'cust': attributes.queryParams.'customerNumber'
+			<when expression="#[attributes.queryParams.'customerNumber' != null and attributes.queryParams.'orderDate' != null]">
+				<db:query-single doc:name="Query single" doc:id="d2c3084b-144c-4982-8ce7-f302d12d276f" config-ref="Database_Config">
+					<db:sql><![CDATA[select O.customerNumber,O.orderDate from complaint C join Orders O on O.customerNumber=C.customerNumber where C.customerNumber=:cust and O.orderDate=:ode]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"cust":vars.customerNumber,
+	"ode":vars.orderDate
 }]]]></db:input-parameters>
-				</db:select>
-			</when>
-			<when expression="#[attributes.queryParams.'orderNumber' !=null]">
-				<db:select doc:name="Select" doc:id="c44f1380-f1b4-4ed4-bb61-90fd49985832" config-ref="Database_Config">
-					<db:sql ><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
-where O.orderNumber=:OID;]]></db:sql>
-					<db:input-parameters ><![CDATA[#[{
-	'OID': attributes.queryParams.'orderNumber'
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="852451af-c0a1-4011-9ac4-579ec0810647" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="18e6588a-50fd-4294-8ff5-8f1e08016ed6" config-ref="Database_Config">
+							<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.orderNumber=C.orderNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode where O.orderDate=:OD and C.customerNumber=:cust;]]></db:sql>
+							<db:input-parameters><![CDATA[#[{
+	'cust': vars.customerNumber,
+	'OD': vars.orderDate
 }]]]></db:input-parameters>
-				</db:select>
+						</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="e0766502-1c26-4198-89f4-4fd11757b4e2" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+ Complain:{
+ 	CustomerNumber: $.customerNumber,
+ 	OrderDetails:{
+ 		OrderID: $.orderNumber,
+ 		OrderDate: $.orderDate
+ 		
+ 	},
+ 	ProductDetails:{
+ 		ProductId: $.productCode,
+ 		ProductName: $.productName,
+ 		ProductCost: $.buyPrice
+ 	}
+ }
+		
+	}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="Transform Message" doc:id="af813b3d-3f14-4d26-97f7-07f471e86ee6">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"You have entered either wrong customer Number or invalid Date"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
 			</when>
-			<when expression="#[attributes.queryParams.'orderDate' !=null]">
-				<db:select doc:name="Select" doc:id="d7dc97d1-88c7-47d4-ab0b-70388c1b9e1b" config-ref="Database_Config">
-					<db:sql ><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
-where O.orderDate=:OD;]]></db:sql>
-					<db:input-parameters ><![CDATA[#[{
-	'OD': attributes.queryParams.'orderDate'
+			<when expression="#[attributes.queryParams.'customerNumber' != null and attributes.queryParams.'orderNumber' !=null]">
+				<db:query-single doc:name="Query single" doc:id="442e31d8-237c-4b91-b3a5-a80f076f8973" config-ref="Database_Config">
+					<db:sql><![CDATA[select O.orderDate,O.orderNumber from complaint C join Orders O on O.customerNumber=C.customerNumber where O.orderNumber=:odn and O.customerNumber=:cust]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"odn":vars.orderNumber,
+	"cust":vars.customerNumber
 }]]]></db:input-parameters>
-				</db:select>
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="2b5fa40f-8bc3-4576-9679-7ea6e491c22e" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="43eddaa5-5b04-49d9-a905-1fe7116ef6e3" config-ref="Database_Config">
+							<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
+where C.customerNumber=:cust and O.orderNumber=:OID]]></db:sql>
+							<db:input-parameters><![CDATA[#[{
+	'cust': vars.customerNumber,
+	'OID': vars.orderNumber
+}]]]></db:input-parameters>
+						</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="18b54741-2687-4f27-ba96-7dcd77ba37da" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+ Complain:{
+ 	CustomerNumber: $.customerNumber,
+ 	OrderDetails:{
+ 		OrderID: $.orderNumber,
+ 		OrderDate: $.orderDate
+ 		
+ 	},
+ 	ProductDetails:{
+ 		ProductId: $.productCode,
+ 		ProductName: $.productName,
+ 		ProductCost: $.buyPrice
+ 	}
+ }
+		
+	}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="84804706-4e86-4d48-80e8-db21a674e6c3">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"You have enterd either worng Customer Number or Order Number"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
 			</when>
-			<otherwise >
-				<db:select doc:name="Select" doc:id="93994897-bd07-4616-90df-7eac78b2e5cf" config-ref="Database_Config">
-					<db:sql ><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
-]]></db:sql>
-				</db:select>
-			</otherwise>
-		</choice>
-		<ee:transform doc:name="Transform Message" doc:id="f9257f5c-2426-4c94-9161-942c6ba0a844" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+			<when expression="#[attributes.queryParams.'orderNumber' !=null and attributes.queryParams.'orderDate' !=null]">
+				<db:query-single doc:name="Query single" doc:id="f1bec7e6-e423-4bb7-af5f-1789be48de3f" config-ref="Database_Config">
+					<db:sql><![CDATA[select O.orderDate,O.orderNumber from complaint C join Orders O on O.customerNumber=C.customerNumber where O.orderNumber=:odn and O.orderDate=:ode]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"odn":vars.orderNumber,
+	"ode":vars.orderDate
+}]]]></db:input-parameters>
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="2354c758-f190-4363-8d03-1ecea280bfd9" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="ef7bb36b-dfaf-41d1-8ad3-bbdebeb53a98" config-ref="Database_Config">
+							<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
+where O.orderNumber=:OID and O.orderDate=:OD;]]></db:sql>
+							<db:input-parameters><![CDATA[#[{
+	'OID': vars.orderNumber,
+	'OD': vars.orderDate
+}]]]></db:input-parameters>
+						</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="f9257f5c-2426-4c94-9161-942c6ba0a844">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload map{
@@ -82,18 +233,213 @@ payload map{
 	}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="Transform Message" doc:id="f7ac4b18-1425-4c49-934e-a2c5647d75d5">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"You have either entered invalid orderNumber or orderDate"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<when expression="#[attributes.queryParams.'orderNumber' != null]">
+				<db:query-single doc:name="Query single" doc:id="3928f565-8f1b-4417-83cf-d74b4d766718" config-ref="Database_Config">
+					<db:sql><![CDATA[select O.orderNumber,C.customerNumber from complaint P join Customers C on C.customerNumber=P.customerNumber join Orders O on O.customerNumber=C.customerNumber where O.orderNumber=:ode]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"ode":vars.orderNumber
+}]]]></db:input-parameters>
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="b84b0f48-02dd-44c2-b529-7372d78e5501" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="c44f1380-f1b4-4ed4-bb61-90fd49985832" config-ref="Database_Config">
+					<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
+where O.orderNumber=:OID;]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	'OID': vars.orderNumber
+}]]]></db:input-parameters>
+				</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="056f6790-5580-4f5b-a486-fb1999ccc8c4">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+ Complain:{
+ 	CustomerNumber: $.customerNumber,
+ 	OrderDetails:{
+ 		OrderID: $.orderNumber,
+ 		OrderDate: $.orderDate
+ 		
+ 	},
+ 	ProductDetails:{
+ 		ProductId: $.productCode,
+ 		ProductName: $.productName,
+ 		ProductCost: $.buyPrice
+ 	}
+ }
+		
+	}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="Transform Message" doc:id="f1b3a358-1afd-4939-893d-2e9c8a565f38">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Not a valid order Number"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<when expression="#[attributes.queryParams.'orderDate' !=null]">
+				<db:query-single doc:name="Query single" doc:id="f4a3a0e0-cc9f-4a22-bf09-ca7e93146a5a" config-ref="Database_Config">
+					<db:sql><![CDATA[select O.orderDate,C.customerNumber from complaint C join Orders O on O.customerNumber=C.customerNumber where orderDate=:odate]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"odate":vars.orderDate
+}]]]></db:input-parameters>
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="5e4fcb7f-58c7-4d63-a917-9ebb75c72c35" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="d7dc97d1-88c7-47d4-ab0b-70388c1b9e1b" config-ref="Database_Config">
+					<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.orderNumber=C.orderNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode where O.orderDate=:OD;]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	'OD': vars.orderDate
+}]]]></db:input-parameters>
+				</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="1a834a70-76af-47c0-8a9b-5a7e27afd0ca" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+ Complain:{
+ 	CustomerNumber: $.customerNumber,
+ 	OrderDetails:{
+ 		OrderID: $.orderNumber,
+ 		OrderDate: $.orderDate
+ 		
+ 	},
+ 	ProductDetails:{
+ 		ProductId: $.productCode,
+ 		ProductName: $.productName,
+ 		ProductCost: $.buyPrice
+ 	}
+ }
+		
+	}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="Transform Message" doc:id="c7e91c92-b50b-4b70-940c-ff59123c1e10">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Enter valid order Date"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<when expression="#[attributes.queryParams.'customerNumber' != null]">
+				<db:query-single doc:name="Query single" doc:id="27490871-6b68-4577-bd2e-7f1042d8d1ba" config-ref="Database_Config">
+					<db:sql ><![CDATA[select C.customerName,C.customerNumber from complaint P join Customers C on C.customerNumber=P.customerNumber where P.customerNumber=:number ]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"number":vars.customerNumber
+}]]]></db:input-parameters>
+				</db:query-single>
+				<choice doc:name="Choice" doc:id="62ae5cdd-068c-4f80-aa80-9a8e2905e36e" >
+					<when expression="#[sizeOf(payload)&gt;0]">
+						<db:select doc:name="Select" doc:id="fe35509f-cdc2-40fe-a393-5bfcaa1101fb" config-ref="Database_Config">
+					<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.orderNumber=C.orderNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode where C.customerNumber=:cust;]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	'cust': vars.customerNumber
+}]]]></db:input-parameters>
+				</db:select>
+						<ee:transform doc:name="Transform Message" doc:id="77a3a083-a9c7-4ca4-8f36-0cf79d457b80" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+ Complain:{
+ 	CustomerNumber: $.customerNumber,
+ 	OrderDetails:{
+ 		OrderID: $.orderNumber,
+ 		OrderDate: $.orderDate
+ 		
+ 	},
+ 	ProductDetails:{
+ 		ProductId: $.productCode,
+ 		ProductName: $.productName,
+ 		ProductCost: $.buyPrice
+ 	}
+ }
+		
+	}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="5e0d7062-e9dd-4d6d-9193-f321f7eaf6ef" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Not a valid customer"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="c8778d83-763d-47ae-9f47-d750b375e085" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Select atleast one of the Fields"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="GetByIDFlow" doc:id="be76ddf9-599e-4be1-8ae7-6882841cd12c" >
-		<db:query-single doc:name="Query single" doc:id="a972339f-80ca-4833-9a69-8be59517e481" config-ref="Database_Config">
-			<db:sql ><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.customerNumber=C.customerNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode
-where C.complainNumber=:number]]></db:sql>
+		<db:query-single doc:name="Query single" doc:id="de93252b-e452-458b-85de-6014676ea64f" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from complaint where complainNumber=:number]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"number":vars.complaintID
 }]]]></db:input-parameters>
 		</db:query-single>
-		<ee:transform doc:name="Transform Message" doc:id="aae787bc-4da9-475d-a307-7e36a894fe42" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<choice doc:name="Choice" doc:id="6ba1224e-62b6-42a2-a5be-0a3e34ceba32" >
+			<when expression="#[sizeOf(payload)&gt;0]">
+				<db:query-single doc:name="Query single" doc:id="a972339f-80ca-4833-9a69-8be59517e481" config-ref="Database_Config">
+			<db:sql><![CDATA[select C.customerNumber,O.orderNumber,O.orderDate,P.productCode,P.productName,P.buyPrice from complaint C join Orders O On O.orderNumber=C.orderNumber join OrderDetails D On D.orderNumber=O.OrderNumber join Products P on P.productCode=D.productCode where C.complainNumber=:number;]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"number":vars.complaintID
+}]]]></db:input-parameters>
+		</db:query-single>
+				<ee:transform doc:name="Transform Message" doc:id="aae787bc-4da9-475d-a307-7e36a894fe42">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
@@ -114,6 +460,20 @@ output application/json
 	}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="cc49fed2-0d19-4b66-9a47-22b09c768041" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Enter correct complaint Number"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="DeleteFlow" doc:id="b7916f7a-5cef-4234-ae48-f1aabc6c8b04" >
 		<db:delete doc:name="Delete" doc:id="3a2af2a4-7a1a-4497-85a4-e3bee4231f59" config-ref="Database_Config">
@@ -135,16 +495,19 @@ output application/json
 	</flow>
 	<flow name="PatchFlow" doc:id="024d64f1-f2ce-452a-9bdd-b7a08bc5bc65" >
 		<flow-ref doc:name="Flow Reference" doc:id="e3bf0186-f1c1-4541-8ad4-a7166252eb55" name="Subflow"/>
-		<db:update doc:name="Update" doc:id="e8a386f2-bc54-4416-9d8d-fe5ecad5c5d7" config-ref="Database_Config">
-			<db:sql ><![CDATA[update complaint set complainDesc=:Desc where complainNumber=:number;]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+		<choice doc:name="Choice" doc:id="e6ccdcd0-479f-4254-b1d6-816646cb471e" >
+			<when expression='#[vars.status=="Resolved"]'>
+				<db:update doc:name="Update" doc:id="e8a386f2-bc54-4416-9d8d-fe5ecad5c5d7" config-ref="Database_Config">
+			<db:sql><![CDATA[update complaint set complainStatus=:status where complainNumber=:number;]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
 	"Desc":vars.Desc,
-	"number":vars.complaintID
+	"number":vars.complaintID,
+	"status":vars.status
 }]]]></db:input-parameters>
 		</db:update>
-		<ee:transform doc:name="Transform Message" doc:id="7f90c393-82cd-4dc4-aafc-68acc2b1e885" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+				<ee:transform doc:name="Transform Message" doc:id="7f90c393-82cd-4dc4-aafc-68acc2b1e885">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
@@ -152,9 +515,24 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="42daacb9-c348-4162-b28e-5707574ca04a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"You either entered wrong complaint Number or improper status "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="PostFlow" doc:id="d2ca29d2-b284-49ee-ab54-130295bc7228" >
 		<flow-ref doc:name="Flow Reference" doc:id="ee372888-986b-432f-9a63-47c7cbf7fdbe" name="Subflow"/>
+		<validation:is-email doc:name="Is email" doc:id="345f29a5-41a1-4dbc-ad4b-7d4441f4d636" email="#[vars.Mail]" message='#["Enter Correct format of Mail-Id"]'/>
 		<db:query-single doc:name="Query single" doc:id="70c61a73-5f1c-4282-9e16-db443a2ff7a6" config-ref="Database_Config">
 			<db:sql ><![CDATA[select MAX(complainNumber) from complaint;]]></db:sql>
 		</db:query-single>
@@ -164,19 +542,22 @@ output application/json
 output application/json
 ---
 {
-	number:"C" ++ ((payload."MAX(complainNumber)"[1 to 3] as Number) +1)
+	number:"C" ++ ((payload."MAX(complainNumber)"[1 to 4] as Number) +1)
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<db:insert doc:name="Insert" doc:id="8f0bc7e1-de65-48bc-b422-7d10cc38cfd6" config-ref="Database_Config">
-			<db:sql ><![CDATA[insert into complaint (complainNumber,productCode,complainDesc,complainDate,customerNumber) 
-values(:number,:code,:desc,:date,:Number)]]></db:sql>
+			<db:sql ><![CDATA[insert into complaint (complainNumber,productCode,complainDesc,complainDate,customerNumber,complainStatus,customerMail,orderNumber) 
+values(:number,:code,:desc,:date,:Number,:status,:mail,:odn)]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"number":payload.number,
 	"code":vars.Code,
 	"desc":vars.Desc,
 	"date":vars.Date,
-	"Number":vars.Number
+	"Number":vars.Number,
+	"status":vars.defaultStatus,
+	"mail":vars.Mail,
+	"odn":vars.orderNumber
 }]]]></db:input-parameters>
 		</db:insert>
 		<db:query-single doc:name="Query single" doc:id="9ef76cef-ba82-43c3-81a3-80829c29e8c8" config-ref="Database_Config">
@@ -199,39 +580,27 @@ output application/json
 		<db:query-single doc:name="Query single" doc:id="71678e35-3a75-4d7a-bb06-03e3473326bd" config-ref="Database_Config">
 			<db:sql ><![CDATA[select * from complaint where complainNumber=:number;]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
-	"number":vars.complaintID default "C010"
+	"number":vars.complaintID default "C1001"
 }]]]></db:input-parameters>
 		</db:query-single>
 		<choice doc:name="Choice" doc:id="b5fa2de8-4e74-4898-bf6b-8b8d1b379dad" >
 			<when expression="#[sizeOf(payload)&gt;0]">
 				<db:update doc:name="Update" doc:id="2e265d69-ba15-45c3-b681-39050e2e1c5b" config-ref="Database_Config">
-					<db:sql ><![CDATA[update complaint set productCode=:code,complainDesc=:desc,complainDate=:date,customerNumber=:Number where complainNumber=:number;]]></db:sql>
+					<db:sql ><![CDATA[update complaint set productCode=:code,complainDesc=:desc,complainDate=:date,customerNumber=:Number,complainStatus=:status,customerMail=:mail,orderNumber=:odn where complainNumber=:number;]]></db:sql>
 					<db:input-parameters ><![CDATA[#[{
 	"number":vars.complaintID,
 	"code":vars.Code,
 	"desc":vars.Desc,
 	"date":vars.Date,
-	"Number":vars.Number
+	"Number":vars.Number,
+	"status":vars.defaultStatus,
+	"mail":vars.Mail,
+	"odn":vars.orderNumber
 }]]]></db:input-parameters>
 				</db:update>
-			</when>
-			<otherwise >
-				<db:insert doc:name="Insert" doc:id="5cd4dc84-e603-4eea-83b8-4cab0918c32e" config-ref="Database_Config">
-					<db:sql ><![CDATA[insert into complaint (complainNumber,productCode,complainDesc,complainDate,customerNumber) 
-values(:number,:code,:desc,:date,:Number)]]></db:sql>
-					<db:input-parameters ><![CDATA[#[{
-	"number":vars.complaintID,
-	"code":vars.Code,
-	"desc":vars.Desc,
-	"date":vars.Date,
-	"Number":vars.Number
-}]]]></db:input-parameters>
-				</db:insert>
-			</otherwise>
-		</choice>
-		<ee:transform doc:name="Transform Message" doc:id="0e2e367a-894d-4588-8f2e-2ddf5d7e3c6e" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+				<ee:transform doc:name="Transform Message" doc:id="0e2e367a-894d-4588-8f2e-2ddf5d7e3c6e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
@@ -239,6 +608,34 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+			</when>
+			<otherwise >
+				<db:insert doc:name="Insert" doc:id="5cd4dc84-e603-4eea-83b8-4cab0918c32e" config-ref="Database_Config">
+					<db:sql ><![CDATA[insert into complaint (complainNumber,productCode,complainDesc,complainDate,customerNumber,complainStatus,customerMail,orderNumber) 
+values(:number,:code,:desc,:date,:Number,:status,:mail,:odn)]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"number":vars.complaintID,
+	"code":vars.Code,
+	"desc":vars.Desc,
+	"date":vars.Date,
+	"Number":vars.Number,
+	"status":vars.defaultStatus,
+	"mail":vars.Mail,
+	"odn":vars.orderNumber
+}]]]></db:input-parameters>
+				</db:insert>
+				<ee:transform doc:name="Transform Message" doc:id="244bb10b-cd2d-4f78-bb0d-652d60cbf661" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"New complaint is added "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 		<set-variable value="201" doc:name="httpStatus" doc:id="3d3c1b22-2b8a-42d1-976f-03334b33a58a" variableName="httpStatus"/>
 	</flow>
 </mule>

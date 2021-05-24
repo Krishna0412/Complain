@@ -30,9 +30,13 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 			<set-payload value='#["Error while connecting to database"]' doc:name="Set Payload" doc:id="728994e9-c793-4478-8187-f59cce151551" />
 			<set-variable value="500" doc:name="httpstatus" doc:id="df10b565-948c-451c-9c22-5fcbff6cd9b9" variableName="httpstatus" />
 		</on-error-continue>
-		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="067f2d60-938d-4b3f-b7db-13f3f0446d59" type="ANY" >
-			<set-payload value='#["Error"]' doc:name="Set Payload" doc:id="c03eae07-fa1d-4a53-9f9c-b917235d7e56" />
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="067f2d60-938d-4b3f-b7db-13f3f0446d59" type="VALIDATION:INVALID_EMAIL" >
+			<set-payload value='#[error.description]' doc:name="Set Payload" doc:id="c03eae07-fa1d-4a53-9f9c-b917235d7e56" />
 			<set-variable value="500" doc:name="httpstatus" doc:id="c1e46813-ac9d-4e02-aa0a-46f855f1ee41" variableName="httpstatus" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2cd19393-cf94-4584-8798-3573b48e3a93" type="ANY">
+			<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="11e47149-8e94-4a8a-994a-194610f031b9" />
+			<set-variable value="500" doc:name="Set Variable" doc:id="941750bf-fa5b-4380-9153-662bf54d9e1c" variableName="httpStatus"/>
 		</on-error-continue>
 	</error-handler>
 	

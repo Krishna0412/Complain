@@ -35,31 +35,64 @@
 			<munit-tools:assert-equals doc:name="Assert equals" doc:id="0b8f88a5-4304-461f-b299-401c33a24eb9" actual="#[payload.message]" expected='#["The data for your complaint is deleted"]' message='"Check the delete flow"'/>
 		</munit:validation>
 	</munit:test>
-	<munit:test name="Implementation-test-suite-PatchFlowTest" doc:id="04a96a33-2feb-4b40-94d8-b0c9b59d2a81" description="Test">
+	<munit:test name="Implementation-test-suite-PatchFlowTest" doc:id="f6e85c11-778b-4e15-b79f-3c3fce2efeff" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="571cde2b-dfe7-4813-b2f6-fa07a6f892da" processor="flow">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="PatchFlow" attributeName="name" />
+					<munit-tools:with-attribute whereValue="024d64f1-f2ce-452a-9bdd-b7a08bc5bc65" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
 		<munit:execution >
-			<munit:set-null-payload doc:name="Set null payload" doc:id="079ea32d-3463-49d4-a138-5e7d881635ab" />
-			<flow-ref doc:name="Flow-ref to PatchFlow" doc:id="6078ab5b-2597-4cfa-accf-302c0ef52589" name="PatchFlow"/>
+			<munit:set-event doc:name="Set Event" doc:id="f9e9ec9c-b320-4bd0-8c4d-76cbe5b1a2e0" >
+				<munit:payload value='{&#10;	"complainStatus":"Resolved"&#10;}' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to PatchFlow" doc:id="e02475f1-1c6a-4890-b128-cb881bbb6861" name="PatchFlow"/>
 		</munit:execution>
 		<munit:validation >
-			<munit-tools:assert-equals doc:name="Assert equals" doc:id="4d376a39-fcf1-4484-b391-fad99eab867d" actual="#[payload.message]" expected='#["Your data is updated"]' message='"Check the patch flow"'/>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="a469737a-d4aa-4e81-8484-c04228c3266f" actual="#[payload.message]" expected='#["Your data is updated"]'/>
 		</munit:validation>
 	</munit:test>
-	<munit:test name="Implementation-test-suite-PostFlowTest" doc:id="bbe2820c-3622-4dbe-82b7-668257548ff2" description="Test">
+	<munit:test name="Implementation-test-suite-PostFlowTest" doc:id="4f46f66d-22b7-442e-a6ed-6ed0de7e2d0b" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="17d4f4a3-a51e-4b64-84f5-31e20aacb121" processor="flow">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="PostFlow" attributeName="name" />
+					<munit-tools:with-attribute whereValue="d2ca29d2-b284-49ee-ab54-130295bc7228" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
 		<munit:execution >
-			<munit:set-null-payload doc:name="Set null payload" doc:id="0f06544f-f67f-4298-9423-b9b8f0851924" />
-			<flow-ref doc:name="Flow-ref to PostFlow" doc:id="5b81e6dc-7d7c-4484-86c9-1b1b34651530" name="PostFlow"/>
+			<munit:set-event doc:name="Set Event" doc:id="00b60835-7fe7-4e41-947e-796788ab149d" >
+				<munit:payload value='{&#10;  "productCode":"P1008",&#10;  "complainDesc":"Expired product",&#10;  "customerNumber":10004,&#10;  "customerMail":"krishnajha129@gmail.com",&#10;  "orderNumber":2&#10;}' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to PostFlow" doc:id="35470ae5-d77e-4021-8cf4-98c4e1de7687" name="PostFlow"/>
 		</munit:execution>
 		<munit:validation >
-			<munit-tools:assert-equals doc:name="Assert equals" doc:id="035c0031-eb4e-4b3a-b03c-5321efe5a208" actual="#[vars.httpStatus]" expected='#["201"]'/>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="b2126acd-9bda-43af-b914-74210ab8436d" actual="#[vars.httpStatus]" expected='#["201"]'/>
 		</munit:validation>
 	</munit:test>
-	<munit:test name="Implementation-test-suite-PutFlowTest" doc:id="70274dad-f402-405a-bb97-9f095796bec7" description="Test">
+	<munit:test name="Implementation-test-suite-PutFlowTest" doc:id="89df6906-f635-4ddd-ab46-f40a6b806828" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="fa919c94-da0e-4d7c-9b38-7074a13a46a0" processor="flow">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="PutFlow" attributeName="name" />
+					<munit-tools:with-attribute whereValue="d8161c2b-3549-4b8f-bd4a-da99050dd63f" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
 		<munit:execution >
-			<munit:set-null-payload doc:name="Set null payload" doc:id="7cd8061b-644b-42e4-b3c0-41ac0cbebdd3" />
-			<flow-ref doc:name="Flow-ref to PutFlow" doc:id="d415208a-1201-4ade-bccb-9651bf69f6f9" name="PutFlow"/>
+			<munit:set-event doc:name="Set Event" doc:id="6e91dfc0-a541-4a78-a340-0756be4a7770" >
+				<munit:payload value='{&#10;  "productCode":"P1008",&#10;  "complainDesc":"Expired product",&#10;  "customerNumber":10004,&#10;  "customerMail":"krishnajha129@gmail.com",&#10;  "orderNumber":2&#10;}' mediaType="application/json" />
+				<munit:variables >
+					<munit:variable key="complainNumber" value='"C1002"' />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to PutFlow" doc:id="f1ced546-a85e-42f7-ac4a-b2ce6bb59873" name="PutFlow"/>
 		</munit:execution>
-		<munit:validation>
-			<munit-tools:assert-equals doc:name="Assert equals" doc:id="d93fbf41-aa6a-4278-9f78-74e1890cd3ef" actual="#[vars.httpStatus]" expected='#["201"]'/>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="8e94a85e-6031-4ee5-9521-6f8d80b09d96" actual="#[vars.httpStatus]" expected='#["201"]'/>
 		</munit:validation>
 	</munit:test>
 
